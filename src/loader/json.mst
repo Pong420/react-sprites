@@ -1,0 +1,8 @@
+{
+    "frames": {
+    {{#rects}}
+        "{{{name}}}": { "name": "{{name}}", "width": {{frame.w}}, "height": {{frame.h}}, "x": -{{frame.x}}, "y": -{{frame.y}} } {{^last}},{{/last}}
+    {{/rects}}
+    }, 
+    "size": { "width": {{config.imageWidth}}, "height": {{config.imageHeight}} }
+}
