@@ -1,3 +1,14 @@
+declare global {
+  interface NodeRequire {
+    (url: `${string}?sprites`): SpriteModule;
+  }
+}
+
+declare module '*?sprites' {
+  const module: SpriteModule;
+  export default module;
+}
+
 export interface Texture {
   path: string; // path without file extension is the key or frames
   contents: Buffer;
@@ -8,11 +19,8 @@ export interface PackOptions {
   textures: Texture[];
 }
 
-/**
- * Except index, SpriteData is depends on `json.mst`
- */
 export interface SpriteData {
-  name: string; // single texture name
+  name: string; // the texture name ( without file extension )
   width: number;
   height: number;
   x: number;
@@ -21,7 +29,7 @@ export interface SpriteData {
 }
 
 export interface SpriteImage {
-  name: string; // the sprite image name, if multiple sprites generated, it will suffix with -0, -1, -2....
+  name: string; // the sprite sheet image name, if multiple sprites generated, it will suffix with -0, -1, -2....
   ext: string; // file extension with dot
   width: number;
   height: number;
@@ -30,8 +38,14 @@ export interface SpriteImage {
 }
 
 export interface SpriteModule extends SpriteData {
+  /**
+   * Check the parseResourcePath in packages/image/loader/store.ts
+   * It is not unqiue, I will be duplicated when multiple sprite sheets generated from one source
+   */
   key: string;
-  name: string; // texture name
+  /**
+   * The sprite sheet image url
+   */
   source: string;
   /**
    * Currently, sourceSet only have webp right now
@@ -41,9 +55,18 @@ export interface SpriteModule extends SpriteData {
    * }
    */
   sourceSet: Record<string, SpriteModule>;
+  /**
+   * The directory name of the textures
+   */
   group: string;
+  /**
+   *  <group_name>/<texture_name>
+   */
   frameName: string;
-  spriteName: string; // same as SpriteImage['name']
+  /**
+   * The sprite sheet image name, if multiple sprites generated, it will suffix with -0, -1, -2...
+   */
+  spriteName: string;
   spriteWidth: number;
   spriteHeight: number;
 

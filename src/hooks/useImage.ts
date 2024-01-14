@@ -27,7 +27,7 @@ export function useImage({
     console.warn(`some thing wrong with the source`, source);
   }
 
-  // This is the natural size of the texture, and it could be scaled during the packing process if the scaleFactor feature is implemented.
+  // This is the natural size of the texture, if the scaleFactor feature is implemented, the value could be scaled.
   // So, these two values could differ from those in the source files provided by the designer.
   const sourceWidth = source.width;
   const sourceHeight = source.height;

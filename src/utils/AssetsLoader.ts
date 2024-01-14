@@ -1,5 +1,6 @@
 import { SpriteModule } from '../types';
 import { isWebpSupported } from './isWebpSupported';
+import { clearImageElements, spriteImageKey, createIfNotExists } from './image';
 
 export type AssetLoaderPayload =
   | __WebpackModuleApi.RequireContext
@@ -28,19 +29,11 @@ interface LoadCallbackArg {
   percentage: number;
 }
 
-declare global {
-  interface Window {
-    'react-sprites/images': Record<string, HTMLImageElement>;
-  }
-}
-
 const parseURL = (url: string): RawAsset => {
   const matches = url.match(/[^/]+(?=\.(\w+)$)/);
   const [basename = '', ext = ''] = matches || [];
   return { key: basename.replace(/\..*$/, ''), ext, url };
 };
-
-const spriteImageKey = (module: SpriteModule) => module.spriteName;
 
 const supportWebp = isWebpSupported();
 
@@ -54,16 +47,6 @@ export function getPreferredSource(module: SpriteModule) {
   return module;
 }
 
-export function getImageElement(
-  module: SpriteModule
-): HTMLImageElement | undefined {
-  return window['react-sprites/images']?.[spriteImageKey(module)];
-}
-
-if (!window['react-sprites/images']) {
-  window['react-sprites/images'] = {};
-}
-
 /**
  * Assets preload helper, work with any resource
  */
@@ -73,46 +56,45 @@ export class AssetsLoader {
   protected tasks = new Map<string, Promise<unknown>>();
 
   protected fromPayloads(payloads: AssetLoaderPayload[]) {
-    return payloads.reduce(function normalise(
-      assets,
-      p
-    ): Record<string, RawAsset | LoaderAsset> {
-      if (typeof p === 'string') {
-        const asset = parseURL(p);
-        return { ...assets, [asset.key]: asset };
-      }
-
-      if ('source' in p) {
-        const key = spriteImageKey(p);
-        return { ...assets, [key]: { ...parseURL(p.source), key, payload: p } };
-      }
-
-      // this allow custom key
-      if ('key' in p && 'url' in p) {
-        return { ...assets, [p.key]: { ...parseURL(p.url), key: p.key } };
-      }
-
-      if ('key' in p && p['load']) {
-        return { ...assets, [p.key]: p };
-      }
-
-      if (typeof p === 'function') {
-        if (p instanceof Promise) {
-          // tried support lazy mode of require.context but
-          // seems not meaningful and cannot implement correctly
-          throw new Error('require.content with lazy option is not supported');
+    return payloads.reduce(
+      function normalise(assets, p): Record<string, RawAsset | LoaderAsset> {
+        if (typeof p === 'string') {
+          const asset = parseURL(p);
+          return { ...assets, [asset.key]: asset };
         }
 
-        const ctx = p;
-        return ctx
-          .keys()
-          .map((k) => ctx<string | SpriteModule>(k))
-          .reduce(normalise, assets);
-      }
+        if ('source' in p) {
+          const key = spriteImageKey(p);
+          return { ...assets, [key]: { ...parseURL(p.source), key, payload: p } };
+        }
 
-      return assets;
-    },
-    {} as Record<string, RawAsset | LoaderAsset>);
+        // this allow custom key
+        if ('key' in p && 'url' in p) {
+          return { ...assets, [p.key]: { ...parseURL(p.url), key: p.key } };
+        }
+
+        if ('key' in p && p['load']) {
+          return { ...assets, [p.key]: p };
+        }
+
+        if (typeof p === 'function') {
+          if (p instanceof Promise) {
+            // tried support lazy mode of require.context but
+            // seems not meaningful and cannot implement correctly
+            throw new Error('require.content with lazy option is not supported');
+          }
+
+          const ctx = p;
+          return ctx
+            .keys()
+            .map(k => ctx<string | SpriteModule>(k))
+            .reduce(normalise, assets);
+        }
+
+        return assets;
+      },
+      {} as Record<string, RawAsset | LoaderAsset>
+    );
   }
 
   async load(
@@ -120,8 +102,7 @@ export class AssetsLoader {
     onLoad?: (arg: LoadCallbackArg) => void,
     onError?: (arg: LoadCallbackArg) => void
   ) {
-    if (this.destroyed)
-      console.warn('Trying to load assets but AssetsLoader already destroyed');
+    if (this.destroyed) console.warn('Trying to load assets but AssetsLoader already destroyed');
     if (!payloads || !payloads.length) return;
 
     const assets = this.fromPayloads(payloads);
@@ -165,16 +146,8 @@ export class AssetsLoader {
   }
 
   async loadImage({ key, url, payload }: RawAsset) {
-    const img = new Image();
     const source = payload ? getPreferredSource(payload).source : url;
-
-    await new Promise<string>((resolve, reject) => {
-      img.onload = () => resolve(img.src);
-      img.onerror = (err) => reject(err);
-      img.src = source;
-    });
-
-    window['react-sprites/images'][key] = img;
+    await createIfNotExists(key, source);
   }
 
   destroy() {
@@ -183,6 +156,6 @@ export class AssetsLoader {
      * clean window['react-sprites/images']
      * Because not sure if it will consume memory resources.
      */
-    window['react-sprites/images'] = {};
+    clearImageElements();
   }
 }

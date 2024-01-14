@@ -70,8 +70,8 @@ export async function packTextures({ textureName, textures }: PackOptions): Prom
       const newFrames = metadata[file.name].frames;
 
       for (const k in newFrames) {
-        const name = k.replaceAll('&#x2f;', '/');
-        frames = { ...frames, [name]: { ...newFrames[k], name, index: Number(index) } };
+        const frameName = k.replaceAll('&#x2f;', '/');
+        frames = { ...frames, [frameName]: { ...newFrames[k], name: file.name, index: Number(index) } };
       }
     } else {
       const image: SpriteImage = {

@@ -1,3 +1,5 @@
+import nodePath from 'path';
+
 type Data = ReturnType<typeof parseResourcePath>;
 type Resolved = Data & { contents: Buffer };
 
@@ -13,18 +15,24 @@ export const parseResourcePath = (resourcePath: string) => {
   // extension    | 'png'                                             |
   const [path, group, filename, extension] = matches;
 
-  // eslint-disable-next-line no-sparse-arrays
-  const [, type] = resourcePath.match(/\/(pc|mobile)\//) || [, 'shared'];
-  const [, orientation] = resourcePath.match(/\/(portrait|landscape)\//) || [];
+  /**
+   * pre-defined keys
+   * Textures under the same directory will pack into sprite sheets. The directory name will used as a key.
+   * If there are two data source `/pc/main/` and `/mobile/main/`, the key will be duplicated.
+   * So use some pre-defined keys to prevents conflict
+   */
+  const keys =
+    resourcePath
+      .match(/(pc|mobile|desktop|portrait|landscape|lazy|shared|common)/gi)
+      ?.map(s => s.toLowerCase().replace(/desktop/, 'pc')) || [];
+
   return {
-    // key is a advanaced group, it is not unqiue if multiple sprite generated
-    key: [type, orientation, group].filter(Boolean).join('_'),
-    type,
-    orientation,
+    key: Array.from(new Set([...keys, group])).join('_'),
     group,
     filename,
     extension,
-    path
+    path, // required for free-tex-packer.ts,
+    dirname: nodePath.dirname(resourcePath)
   };
 };
 
@@ -38,7 +46,17 @@ export class TextureStore {
   addTexture(resourcePath: string) {
     const data = parseResourcePath(resourcePath);
     if (!data) return;
+
     this.pending[data.key] = this.pending[data.key] || new Map();
+
+    for (const [, d] of this.pending[data.key]) {
+      if (d && d.dirname !== data.dirname) {
+        throw new Error(
+          `These two directories ${d.dirname}, ${data.dirname} resulting duplicated key ${data.key}. Try to rename one of them or put into pre-defined dirname`
+        );
+      }
+    }
+
     this.pending[data.key].set(data.filename, data);
   }
 

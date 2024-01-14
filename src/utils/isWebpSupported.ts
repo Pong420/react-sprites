@@ -1,6 +1,8 @@
 // https://stackoverflow.com/a/27232658/9633867
 
 export function isWebpSupported() {
+  if (typeof document === 'undefined') return false;
+
   const elem = document.createElement('canvas');
   if (elem.getContext && elem.getContext('2d')) {
     // was able or not to get WebP representation

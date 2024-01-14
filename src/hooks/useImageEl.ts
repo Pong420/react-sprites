@@ -18,7 +18,8 @@ export function useImageEl(options: UseImageOptions) {
     display: 'block', // required, the default diplay (inline / inline-block) may cause the image's height to have an extra 4px
     objectFit: 'none',
     objectPosition: `${x}px ${y}px`,
-    userSelect: 'none'
+    userSelect: 'none',
+    maxWidth: 'none'
   };
 
   if (!source) {

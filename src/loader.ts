@@ -42,21 +42,21 @@ import { SpriteImage, SpriteModule } from './types';
 
 export interface SpriteLoaderOptions {
   /**
-   * free-text-packer: https://github.com/odrick/free-tex-packer
+   * free-tex-packer: https://github.com/odrick/free-tex-packer
    * spritesmith: https://github.com/twolfson/spritesmith
    *
    * The compile time of two packer are similar. `spritesmith` a bit faster
-   * `free-text-packer` has not been updated for a long time, and the author is no longer active.
+   * `free-tex-packer` has not been updated for a long time, and the author is no longer active.
    * `spritesmith` is more active
    *
-   * `free-text-packer` will generate multiple sprite images if source images too large.
-   * `spritesmith` bundle all images into single sprite image.
+   * However, `free-tex-packer` will generate multiple sprite sheets if the total source images too large.
+   * `spritesmith` bundle all images into single sprite sheet.
    *
    * Information from another texture packer software,
    * Bigger textures might not be displayed on some devices or might cause jittering sprites.
-   * So @default "free-text-packer" is used
+   * So @default "free-tex-packer" is used
    */
-  packer?: 'free-text-packer' | 'spritesmith';
+  packer?: 'free-tex-packer' | 'spritesmith';
 
   /**
    * If the texture sizes are double the original size, set the scaleFactor to 0.5.
@@ -115,11 +115,11 @@ export default async function loader(
       `Internal Error, _compiler or _compilation is not defined`
     );
 
-  const { packer = 'free-text-packer', ...options } = this.getOptions();
+  const { packer = 'free-tex-packer', ...options } = this.getOptions();
 
   const { key } = data;
-  const { packTextures } = await (packer === 'free-text-packer'
-    ? import('./loader/packer/free-text-packer')
+  const { packTextures } = await (packer === 'free-tex-packer'
+    ? import('./loader/packer/free-tex-packer')
     : import('./loader/packer/spritesmith'));
 
   const webpackCache = this._compilation.getCache(`sprits-loader/${packer}`);
@@ -234,8 +234,8 @@ export default async function loader(
   tasks.delete(key);
 
   // Value of frameKey depends on `packTextures` function
-  const frameKey = `${data.group}/${data.filename}`;
-  const frame = frames[frameKey];
+  const frameName = `${data.group}/${data.filename}`;
+  const frame = frames[frameName];
   const index = frame?.index ?? 0;
   const image = images[index];
 
@@ -244,9 +244,10 @@ export default async function loader(
     return {
       ...frame,
       key,
+      name: data.filename,
       source: replacement + paths[pathKey(image)],
       group: data.group,
-      frameName: data.filename,
+      frameName,
       spriteName: image.name,
       spriteWidth: image.width,
       spriteHeight: image.height,

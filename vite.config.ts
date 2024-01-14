@@ -29,7 +29,10 @@ export default defineConfig({
     dts(),
     copyFiles({
       relativeDir: srcDir,
-      files: [path.join(srcDir, 'loader', 'json.mst')],
+      files: [
+        path.join(srcDir, 'loader', 'json.mst'),
+        path.join(srcDir, 'types.d.ts'),
+      ],
     }),
   ],
   build: {
@@ -54,7 +57,7 @@ export default defineConfig({
         'react/jsx-runtime',
         ...builtinModules,
         ...builtinModules.map((m) => `node:${m}`),
-        ...Array.from(new Set(deps), (d) => new RegExp(`^${d}`)),
+        // ...Array.from(new Set(deps), (d) => new RegExp(`^${d}`)),
       ],
     },
   },
