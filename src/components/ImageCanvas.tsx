@@ -2,9 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useImageEl, UseImageOptions } from '../hooks/useImageEl';
 import { getImageLoaded } from '../utils/image';
 
-export interface ImageCanvasProps
-  extends UseImageOptions,
-    Omit<React.ComponentProps<'canvas'>, 'width' | 'height'> {
+export interface ImageCanvasProps extends UseImageOptions, Omit<React.ComponentProps<'canvas'>, 'width' | 'height'> {
   /**
    * Allow you to access the canvas 2d context
    * So you may apply some filter / effect, like erasings, grayscale, brightness
@@ -12,10 +10,7 @@ export interface ImageCanvasProps
    * import { grayscale, brightness } from 'react-sprites'
    * <ImageCanvas context={grayscale} />
    */
-  context?: (
-    context: CanvasRenderingContext2D,
-    image: ReturnType<typeof useImageEl>
-  ) => void;
+  context?: (context: CanvasRenderingContext2D, image: ReturnType<typeof useImageEl>) => void;
 }
 
 /**
@@ -28,14 +23,7 @@ export interface ImageCanvasProps
  * You may observe the animation blinking as the images are reloaded every time
  * With canvas we can reuse the image element from `AssetsLoader` without reloading the image url.
  */
-export function ImageCanvas({
-  source,
-  width,
-  height,
-  scale,
-  context,
-  ...props
-}: ImageCanvasProps) {
+export function ImageCanvas({ source, width, height, scale, context, ...props }: ImageCanvasProps) {
   const image = useImageEl({ source, width, height, scale });
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -43,11 +31,11 @@ export function ImageCanvas({
     let cancel = false;
 
     const ctx2d = canvasRef.current?.getContext('2d', {
-      willReadFrequently: true,
+      willReadFrequently: true
     });
     if (!ctx2d) return;
 
-    getImageLoaded(image, (i) => {
+    getImageLoaded(image, i => {
       if (cancel) return;
       ctx2d.clearRect(0, 0, image.width, image.height);
       ctx2d.drawImage(

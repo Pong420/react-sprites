@@ -101,19 +101,14 @@ export const pitch: webpack.PitchLoaderDefinitionFunction = function () {
 };
 
 // normal loader
-export default async function loader(
-  this: webpack.LoaderContext<SpriteLoaderOptions>,
-  source: Buffer
-) {
+export default async function loader(this: webpack.LoaderContext<SpriteLoaderOptions>, source: Buffer) {
   const logger = this.getLogger('react-sprites');
 
   const data = parseResourcePath(this.resourcePath);
 
   if (!data) return logger.warn(`Cannot get data from ${this.resourcePath}`);
   if (!this._compiler || !this._compilation)
-    return logger.warn(
-      `Internal Error, _compiler or _compilation is not defined`
-    );
+    return logger.warn(`Internal Error, _compiler or _compilation is not defined`);
 
   const { packer = 'free-tex-packer', ...options } = this.getOptions();
 
@@ -123,22 +118,17 @@ export default async function loader(
     : import('./loader/packer/spritesmith'));
 
   const webpackCache = this._compilation.getCache(`sprits-loader/${packer}`);
-  const textureCache = new TextureCache(
-    options.cacheDir ? `${options.cacheDir}/${packer}` : ''
-  );
+  const textureCache = new TextureCache(options.cacheDir ? `${options.cacheDir}/${packer}` : '');
 
-  const assetModuleFilename =
-    this._compiler.options.output.assetModuleFilename || '';
+  const assetModuleFilename = this._compiler.options.output.assetModuleFilename || '';
   const emitImage = (image: SpriteImage) => {
     const _assetModuleFilename =
       typeof assetModuleFilename === 'string'
-        ? assetModuleFilename
-            .replace('[name]', image.name)
-            .replace('[ext]', image.ext)
+        ? assetModuleFilename.replace('[name]', image.name).replace('[ext]', image.ext)
         : image.name;
 
     const pathname = interpolateName(this, _assetModuleFilename, {
-      content: image.content,
+      content: image.content
     });
 
     this.emitFile(pathname, image.content, undefined, { immutable: true });
@@ -154,11 +144,10 @@ export default async function loader(
     const startTime = Date.now();
 
     const textureMap = textureStore.getTextures(key);
-    if (!textureMap)
-      throw new Error(`Internal error, textures ${key} not found`);
+    if (!textureMap) throw new Error(`Internal error, textures ${key} not found`);
 
-    const textures = Array.from(textureMap, ([, texture]) => texture).sort(
-      (a, b) => compareFileNames(a.filename, b.filename)
+    const textures = Array.from(textureMap, ([, texture]) => texture).sort((a, b) =>
+      compareFileNames(a.filename, b.filename)
     );
 
     const createETag = (content: string | Buffer) =>
@@ -166,7 +155,7 @@ export default async function loader(
 
     const eTag = [
       createETag(JSON.stringify(options.optimization || {})),
-      ...textures.map((texture) => createETag(texture.contents)),
+      ...textures.map(texture => createETag(texture.contents))
     ].reduce((result, item) => webpackCache.mergeEtags(result, item));
 
     const hash = eTag.toString();
@@ -183,19 +172,18 @@ export default async function loader(
       await textureCache.setCache(key, hash, packed);
     }
 
-    const paths = packed.images.reduce(function reducer(
-      paths,
-      image
-    ): Record<string, string> {
-      const pathname = emitImage(image);
+    const paths = packed.images.reduce(
+      function reducer(paths, image): Record<string, string> {
+        const pathname = emitImage(image);
 
-      for (const k in image.sourceSet) {
-        paths = reducer(paths, image.sourceSet[k]);
-      }
+        for (const k in image.sourceSet) {
+          paths = reducer(paths, image.sourceSet[k]);
+        }
 
-      return { ...paths, [pathKey(image)]: pathname };
-    },
-    {} as Record<string, string>);
+        return { ...paths, [pathKey(image)]: pathname };
+      },
+      {} as Record<string, string>
+    );
 
     const totalTime = Date.now() - startTime;
 
@@ -217,12 +205,7 @@ export default async function loader(
     tasks.set(key, task);
   }
 
-  await new Promise<void>((resolve) =>
-    setTimeout(
-      resolve,
-      typeof options.waitFor === 'number' ? options.waitFor : 1000
-    )
-  );
+  await new Promise<void>(resolve => setTimeout(resolve, typeof options.waitFor === 'number' ? options.waitFor : 1000));
 
   if (textureStore.resolve(this.resourcePath, source)) {
     emitter.emit(key);
@@ -255,7 +238,7 @@ export default async function loader(
       sourceSet: Object.entries(image.sourceSet).reduce(
         (r, [k, v]) => ({ ...r, [k]: imageToModule(v) }),
         {} as SpriteModule['sourceSet']
-      ),
+      )
     };
   };
 

@@ -1,0 +1,21 @@
+{
+  "overrides": [
+    {
+      "files": [".prettierrc", ".babelrc", ".eslintrc", ".stylelintrc"],
+      "options": {
+        "parser": "json"
+      }
+    },
+    {
+      "files": [".exml"],
+      "options": {
+        "plugins": ["plugin-xml"]
+      }
+    }
+  ],
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "none",
+  "arrowParens": "avoid",
+  "printWidth": 120
+}
