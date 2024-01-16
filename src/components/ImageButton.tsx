@@ -1,22 +1,24 @@
-import { Image } from './Image';
-import { useImageButton, UseImageButtonOptions } from '../hooks/useImageButton';
+import { Image, ImageProps } from './Image';
+import { UseImageOptions } from '../hooks/useImage';
+import { buttonStyle, useImageButton, UseImageButtonOptions } from '../hooks/useImageButton';
 
-export interface ImageButtonProps extends UseImageButtonOptions, React.ComponentProps<'button'> {}
+export interface ImageButtonProps
+  extends UseImageButtonOptions,
+    Omit<ImageProps<'button'>, 'source'>,
+    Omit<UseImageOptions, 'source'> {}
 
-export function ImageButton({ normal, hover, down, style, ...props }: ImageButtonProps) {
+export function ImageButton({ normal, hover, down, width, height, scale, style, ...props }: ImageButtonProps) {
   const { source, handlers } = useImageButton({ normal, hover, down, ...props });
   return (
-    <button
+    <Image
+      container="button"
       {...props}
       {...handlers}
-      style={{
-        padding: 0,
-        background: 'none',
-        border: 'none',
-        ...style
-      }}
-    >
-      <Image source={source} />
-    </button>
+      style={{ ...buttonStyle, ...style }}
+      source={source}
+      width={width}
+      height={height}
+      scale={scale}
+    />
   );
 }

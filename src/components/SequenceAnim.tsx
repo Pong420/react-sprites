@@ -8,7 +8,7 @@ export interface SequenceAnimProps extends Omit<ImageCanvasProps, 'source'>, Use
    */
   onFrame?: (frame: number) => void;
   /**
-   * Callback on frames completed, won't be called if the repeat is negative (infinity)
+   * Callback on frames completed, won't be called if the play is (infinity)
    */
   onCompleted?: () => void;
   /**
@@ -21,7 +21,6 @@ export interface SequenceAnimProps extends Omit<ImageCanvasProps, 'source'>, Use
 export function SequenceAnim({
   frames,
   frameRate,
-  repeat,
   repeatAt,
   onFrame,
   onCompleted,
@@ -29,7 +28,7 @@ export function SequenceAnim({
   hideOnCompleted = false,
   ...props
 }: SequenceAnimProps) {
-  const { source, frame, completed } = useSequenceAmin({ frames, frameRate, play, repeat, repeatAt });
+  const { source, frame, completed } = useSequenceAmin({ frames, frameRate, play, repeatAt });
 
   useEffect(() => {
     onFrame?.(frame);

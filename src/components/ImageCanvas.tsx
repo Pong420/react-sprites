@@ -30,9 +30,7 @@ export function ImageCanvas({ source, width, height, scale, context, ...props }:
   useEffect(() => {
     let cancel = false;
 
-    const ctx2d = canvasRef.current?.getContext('2d', {
-      willReadFrequently: true
-    });
+    const ctx2d = canvasRef.current?.getContext('2d', { willReadFrequently: true });
     if (!ctx2d) return;
 
     getImageLoaded(image, i => {

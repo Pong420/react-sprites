@@ -1,6 +1,6 @@
 import { useImageEl, UseImageOptions } from '../hooks/useImageEl';
 
-type ContainerType = keyof Pick<JSX.IntrinsicElements, 'div' | 'button'>;
+type ContainerType = 'div' | 'button';
 
 export type ImageProps<T extends ContainerType = 'div'> = UseImageOptions &
   Omit<React.ComponentProps<T>, 'children' | 'draggable'> & { container?: T; draggable?: boolean };
