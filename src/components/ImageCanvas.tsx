@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useImageEl, UseImageOptions } from '../hooks/useImageEl';
-import { getImageLoaded } from '../utils/image';
+import { getImageWithCallback } from '../utils/image';
 
 export interface ImageCanvasProps extends UseImageOptions, Omit<React.ComponentProps<'canvas'>, 'width' | 'height'> {
   /**
@@ -33,7 +33,7 @@ export function ImageCanvas({ source, width, height, scale, context, ...props }:
     const ctx2d = canvasRef.current?.getContext('2d', { willReadFrequently: true });
     if (!ctx2d) return;
 
-    getImageLoaded(image, i => {
+    getImageWithCallback(image, i => {
       if (cancel) return;
       ctx2d.clearRect(0, 0, image.width, image.height);
       ctx2d.drawImage(

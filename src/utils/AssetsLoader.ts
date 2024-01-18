@@ -56,45 +56,42 @@ export class AssetsLoader {
   protected tasks = new Map<string, Promise<unknown>>();
 
   protected fromPayloads(payloads: AssetLoaderPayload[]) {
-    return payloads.reduce(
-      function normalise(assets, p): Record<string, RawAsset | LoaderAsset> {
-        if (typeof p === 'string') {
-          const asset = parseURL(p);
-          return { ...assets, [asset.key]: asset };
+    return payloads.reduce(function normalise(assets, p): Record<string, RawAsset | LoaderAsset> {
+      if (typeof p === 'string') {
+        const asset = parseURL(p);
+        return { ...assets, [asset.key]: asset };
+      }
+
+      if ('source' in p) {
+        const key = spriteImageKey(p);
+        return { ...assets, [key]: { ...parseURL(p.source), key, payload: p } };
+      }
+
+      // this allow custom key
+      if ('key' in p && 'url' in p) {
+        return { ...assets, [p.key]: { ...parseURL(p.url), key: p.key } };
+      }
+
+      if ('key' in p && p['load']) {
+        return { ...assets, [p.key]: p };
+      }
+
+      if (typeof p === 'function') {
+        if (p instanceof Promise) {
+          // tried support lazy mode of require.context but
+          // seems not meaningful and cannot implement correctly
+          throw new Error('require.content with lazy option is not supported');
         }
 
-        if ('source' in p) {
-          const key = spriteImageKey(p);
-          return { ...assets, [key]: { ...parseURL(p.source), key, payload: p } };
-        }
+        const ctx = p;
+        return ctx
+          .keys()
+          .map(k => ctx<string | SpriteModule>(k))
+          .reduce(normalise, assets);
+      }
 
-        // this allow custom key
-        if ('key' in p && 'url' in p) {
-          return { ...assets, [p.key]: { ...parseURL(p.url), key: p.key } };
-        }
-
-        if ('key' in p && p['load']) {
-          return { ...assets, [p.key]: p };
-        }
-
-        if (typeof p === 'function') {
-          if (p instanceof Promise) {
-            // tried support lazy mode of require.context but
-            // seems not meaningful and cannot implement correctly
-            throw new Error('require.content with lazy option is not supported');
-          }
-
-          const ctx = p;
-          return ctx
-            .keys()
-            .map(k => ctx<string | SpriteModule>(k))
-            .reduce(normalise, assets);
-        }
-
-        return assets;
-      },
-      {} as Record<string, RawAsset | LoaderAsset>
-    );
+      return assets;
+    }, {} as Record<string, RawAsset | LoaderAsset>);
   }
 
   async load(
@@ -102,7 +99,7 @@ export class AssetsLoader {
     onLoad?: (arg: LoadCallbackArg) => void,
     onError?: (arg: LoadCallbackArg) => void
   ) {
-    if (this.destroyed) console.warn('Trying to load assets but AssetsLoader already destroyed');
+    if (this.destroyed) return console.warn('Trying to load assets but AssetsLoader already destroyed');
     if (!payloads || !payloads.length) return;
 
     const assets = this.fromPayloads(payloads);
@@ -153,8 +150,7 @@ export class AssetsLoader {
   destroy() {
     this.destroyed = true;
     /**
-     * clean window['react-sprites/images']
-     * Because not sure if it will consume memory resources.
+     * clear because not sure if it will consume memory resources.
      */
     clearImageElements();
   }
