@@ -97,14 +97,14 @@ export const raw = true;
 // https://webpack.js.org/api/loaders/#pitching-loader
 // It will be processed before the normal loader.
 export const pitch: webpack.PitchLoaderDefinitionFunction = function () {
-  textureStore.addTexture(this.resourcePath);
+  textureStore.addTexture(this.resourcePath, this.rootContext);
 };
 
 // normal loader
 export default async function loader(this: webpack.LoaderContext<SpriteLoaderOptions>, source: Buffer) {
   const logger = this.getLogger('react-sprites');
 
-  const data = parseResourcePath(this.resourcePath);
+  const data = parseResourcePath(this.resourcePath, this.rootContext);
 
   if (!data) return logger.warn(`Cannot get data from ${this.resourcePath}`);
   if (!this._compiler || !this._compilation)
@@ -172,18 +172,15 @@ export default async function loader(this: webpack.LoaderContext<SpriteLoaderOpt
       await textureCache.setCache(key, hash, packed);
     }
 
-    const paths = packed.images.reduce(
-      function reducer(paths, image): Record<string, string> {
-        const pathname = emitImage(image);
+    const paths = packed.images.reduce(function reducer(paths, image): Record<string, string> {
+      const pathname = emitImage(image);
 
-        for (const k in image.sourceSet) {
-          paths = reducer(paths, image.sourceSet[k]);
-        }
+      for (const k in image.sourceSet) {
+        paths = reducer(paths, image.sourceSet[k]);
+      }
 
-        return { ...paths, [pathKey(image)]: pathname };
-      },
-      {} as Record<string, string>
-    );
+      return { ...paths, [pathKey(image)]: pathname };
+    }, {} as Record<string, string>);
 
     const totalTime = Date.now() - startTime;
 
@@ -207,7 +204,7 @@ export default async function loader(this: webpack.LoaderContext<SpriteLoaderOpt
 
   await new Promise<void>(resolve => setTimeout(resolve, typeof options.waitFor === 'number' ? options.waitFor : 1000));
 
-  if (textureStore.resolve(this.resourcePath, source)) {
+  if (textureStore.resolve(this.resourcePath, this.rootContext, source)) {
     emitter.emit(key);
   }
 

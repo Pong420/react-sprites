@@ -4,7 +4,7 @@ type Data = ReturnType<typeof parseResourcePath>;
 type Resolved = Data & { contents: Buffer };
 
 export const resourcePathRegex = /([^/]+)\/([^/]+?)\.(\w+)/;
-export const parseResourcePath = (resourcePath: string) => {
+export const parseResourcePath = (resourcePath: string, rootContext: string) => {
   const matches = resourcePath.match(resourcePathRegex);
   if (!matches) return;
 
@@ -23,7 +23,8 @@ export const parseResourcePath = (resourcePath: string) => {
    */
   const keys =
     resourcePath
-      .match(/(pc|mobile|desktop|portrait|landscape|lazy|shared|common)/gi)
+      .replace(rootContext, '') // remove root context, because the root context could may have `/Desktop/` directory
+      .match(/(pc|mobile|desktop|portrait|landscape|lazy|shared|common|locales)/gi)
       ?.map(s => s.toLowerCase().replace(/desktop/, 'pc')) || [];
 
   return {
@@ -43,8 +44,8 @@ export class TextureStore {
   pending: Record<string, Map<string, Data>> = {};
   resolved: Record<string, Map<string, Resolved>> = {};
 
-  addTexture(resourcePath: string) {
-    const data = parseResourcePath(resourcePath);
+  addTexture(resourcePath: string, rootContext: string) {
+    const data = parseResourcePath(resourcePath, rootContext);
     if (!data) return;
 
     this.pending[data.key] = this.pending[data.key] || new Map();
@@ -64,8 +65,8 @@ export class TextureStore {
     return this.resolved[key];
   }
 
-  resolve(resourcePath: string, contents: Buffer) {
-    const data = parseResourcePath(resourcePath);
+  resolve(resourcePath: string, rootContext: string, contents: Buffer) {
+    const data = parseResourcePath(resourcePath, rootContext);
     if (!data) return;
     const { key } = data;
 
